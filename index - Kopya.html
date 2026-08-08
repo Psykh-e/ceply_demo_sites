@@ -28,7 +28,7 @@
 
       /* Ceplytech Kurumsal Tipografi */
       --font-geist-sans: "Geist", "Geist Fallback", sans-serif;
-      --font-display: 'Syne', sans-serif;
+	  --font-display: 'Syne', sans-serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -108,7 +108,7 @@
       padding: 2rem 4vw; mix-blend-mode: difference;
       font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
     }
-    .logo { font-family: var(--font-display); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
 
     /* ==========================================================================
        05. THE KINETIC INDEX
@@ -131,7 +131,6 @@
       position: relative; display: flex; align-items: center; justify-content: space-between;
       padding: 4.5vh 0; border-bottom: 1px solid var(--border);
       color: var(--text-muted); transition: color 0.4s ease;
-      cursor: none; 
     }
 
     .project-info-left { display: flex; align-items: baseline; gap: 4vw; }
@@ -142,7 +141,7 @@
     }
 
     .project-title {
-      font-family: var(--font-display);
+	  font-family: var(--font-display);
       font-weight: 600;
       font-size: clamp(3.5rem, 7vw, 9rem);
       line-height: 0.85; text-transform: uppercase; letter-spacing: -0.02em;
@@ -184,11 +183,11 @@
     }
     .portal.active .portal-controls { transform: translateY(0); }
 
-    .portal-project-name { font-family: var(--font-display); font-size: 16px; font-weight: 600; text-transform: uppercase; }
+    .portal-project-name { font-size: 16px; font-weight: 600; text-transform: uppercase; }
     
     .btn-close-portal {
       background: var(--text); color: var(--bg);
-      padding: 8px 20px; border-radius: 99px; font-size: 11px;
+      padding: 8px 20px; border-radius: 99px; font-size: 12px;
       font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
       transition: transform 0.3s ease;
     }
@@ -273,6 +272,7 @@
       <!-- KİNETİK DİZİN LİSTESİ -->
       <ul class="project-list">
         
+        <!-- İstediğiniz Özel Renkler Data-Color'a Eklendi -->
         <li class="project-item" data-color="rgb(59, 111, 224)" data-url="./cafe1/index.html" data-img="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80">
           <div class="project-info-left">
             <span class="project-num">01</span>
@@ -305,22 +305,12 @@
           <span class="project-category">Minimal Interface</span>
         </li>
 
-        <!-- GÜNCELLENEN RESTO 1 DİZİNİ -->
-        <li class="project-item" data-color="rgb(59, 111, 224)" data-url="./resto1/index.html" data-img="https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80">
+        <li class="project-item" data-color="rgb(59, 111, 224)" data-url="./restraurant1/index.html" data-img="https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80">
           <div class="project-info-left">
             <span class="project-num">05</span>
             <h2 class="project-title">Resto One</h2>
           </div>
           <span class="project-category">Fine Dining Concept</span>
-        </li>
-
-        <!-- YENİ EKLENEN RESTO 2 DİZİNİ -->
-        <li class="project-item" data-color="rgb(231, 201, 106)" data-url="./resto2/index.html" data-img="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80">
-          <div class="project-info-left">
-            <span class="project-num">06</span>
-            <h2 class="project-title">Resto Two</h2>
-          </div>
-          <span class="project-category">Restaurant Interface</span>
         </li>
 
       </ul>
@@ -357,7 +347,7 @@
     requestAnimationFrame(raf);
 
     // ==========================================================================
-    // 02. CEPLYTECH CURSOR & IMAGE REVEAL LOGIC
+    // 02. CEPLYTECH CURSOR & IMAGE REVEAL LOGIC (TypeScript'ten Vanilla JS'e)
     // ==========================================================================
     const isTouchDevice = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
     
@@ -372,6 +362,7 @@
       let dx = rx;
       let dy = ry;
 
+      // Mouse Move Event
       const move = (e) => {
         dx = e.clientX;
         dy = e.clientY;
@@ -379,14 +370,16 @@
           dot.style.transform = `translate3d(${dx}px, ${dy}px, 0) translate(-50%, -50%)`;
         }
         
+        // Görselin de fareyi takip etmesi için GSAP (Performans için quickTo)
         gsap.to(revealContainer, {
           x: dx, y: dy, duration: 0.4, ease: "power3.out"
         });
       };
 
+      // Loop (Lerp for Ring)
       let rafId = 0;
       const loop = () => {
-        rx += (dx - rx) * 0.18; 
+        rx += (dx - rx) * 0.18; // Sizin TSX kodundaki 0.18 esneme oranı
         ry += (dy - ry) * 0.18;
         if (ring) {
           ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%)`;
@@ -394,6 +387,7 @@
         rafId = requestAnimationFrame(loop);
       };
 
+      // Hover Durumları
       const hoverable = "a, button, [role='button'], [data-cursor='hover'], .project-item, .btn-close-portal";
 
       const over = (e) => {
@@ -417,13 +411,16 @@
       document.addEventListener('mouseover', over);
       document.addEventListener('mouseout', out);
 
+      // PROJE ÖZEL HOVER ETKİLEŞİMLERİ (Görsel Gösterme ve Renk)
       document.querySelectorAll('.project-item').forEach(item => {
         item.addEventListener('mouseenter', () => {
+          // Rengi Ayarla
           const hoverColor = item.getAttribute('data-color');
           if(hoverColor) {
             document.documentElement.style.setProperty('--accent', hoverColor);
           }
 
+          // Görseli Göster
           const imgSrc = item.getAttribute('data-img');
           revealImg.src = imgSrc;
           
@@ -436,6 +433,7 @@
         });
 
         item.addEventListener('mouseleave', () => {
+          // Görseli Gizle
           gsap.to(revealContainer, {
             opacity: 0, autoAlpha: 0, scale: 0.8, duration: 0.4, ease: "power3.out"
           });
@@ -444,7 +442,7 @@
     }
 
     // ==========================================================================
-    // 03. INITIAL LOAD ANIMATION
+    // 03. INTRO ANIMATION
     // ==========================================================================
     window.addEventListener('load', () => {
       gsap.from('.index-header', { opacity: 0, y: 20, duration: 1, delay: 0.2 });
@@ -463,6 +461,7 @@
 
     document.querySelectorAll('.project-item').forEach(item => {
       item.addEventListener('click', (e) => {
+        // Renk Tıklanınca Sabitlensin
         const clickedColor = item.getAttribute('data-color');
         if(clickedColor) {
            document.documentElement.style.setProperty('--accent', clickedColor);
