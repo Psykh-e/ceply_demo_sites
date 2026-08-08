@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CEPLY — Spatial Digital Exhibition</title>
+  
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Core Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       00. SYSTEM & VARIABLES
+       ========================================================================== */
+    :root {
+      --bg: #060606;
+      --fg: #f2f2f2;
+      --muted: #888888;
+      --accent: #d94833;
+      --border: rgba(255, 255, 255, 0.1);
+      
+      --font-display: 'Oswald', sans-serif;
+      --font-serif: 'Cormorant Garamond', serif;
+      --font-ui: 'Inter', sans-serif;
+
+      --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+      --ease-in-out: cubic-bezier(0.86, 0, 0.07, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      background-color: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      color: var(--fg);
+      font-family: var(--font-ui);
+      overflow-x: hidden;
+      overscroll-behavior: none;
+    }
+
+    /* Özel İmleç sadece destekleyen (hover yapabilen) cihazlarda çalışır */
+    @media (hover: hover) and (pointer: fine) {
+      body.custom-cursor-enabled * { cursor: none !important; }
+    }
+
+    ::selection { background: var(--fg); color: var(--bg); }
+    a { color: inherit; text-decoration: none; }
+    button { background: none; border: none; outline: none; color: inherit; font-family: inherit; }
+
+    /* Grain Texture */
+    .grain-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* ==========================================================================
+       01. CUSTOM CURSOR
+       ========================================================================== */
+    .cursor-dot, .cursor-label {
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 10000;
+      transform: translate(-50%, -50%);
+      display: none; /* JS ile açılacak */
+    }
+
+    .cursor-dot {
+      width: 8px; height: 8px;
+      background: var(--fg);
+      border-radius: 50%;
+      mix-blend-mode: difference;
+      transition: width 0.3s var(--ease-out), height 0.3s var(--ease-out), background 0.3s var(--ease-out);
+    }
+
+    .cursor-label {
+      font-family: var(--font-display);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--bg);
+      opacity: 0;
+      transition: opacity 0.3s var(--ease-out);
+      mix-blend-mode: normal;
+    }
+
+    body.custom-cursor-enabled .cursor-dot, 
+    body.custom-cursor-enabled .cursor-label {
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .cursor-active .cursor-dot {
+      width: 72px; height: 72px;
+      background: var(--fg);
+      mix-blend-mode: normal;
+    }
+    .cursor-active .cursor-label { opacity: 1; }
+
+    /* ==========================================================================
+       02. PRELOADER
+       ========================================================================== */
+    .preloader {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 9000;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 40px;
+    }
+
+    .preloader-top, .preloader-bottom {
+      font-family: var(--font-ui); font-size: 12px;
+      text-transform: uppercase; letter-spacing: 2px; color: var(--muted);
+      display: flex; justify-content: space-between;
+    }
+
+    .preloader-center {
+      font-family: var(--font-display);
+      font-size: clamp(4rem, 15vw, 16rem);
+      font-weight: 700; line-height: 0.85;
+      text-align: center; color: var(--fg);
+    }
+
+    .progress-bar-wrap { width: 100%; height: 1px; background: var(--border); margin-top: 20px; position: relative; }
+    .progress-bar { position: absolute; top: 0; left: 0; height: 100%; background: var(--fg); width: 0%; }
+
+    /* ==========================================================================
+       03. HUD (HEADER & FOOTER OVERLAYS)
+       ========================================================================== */
+    .hud {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 100;
+      padding: 40px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      mix-blend-mode: difference;
+    }
+
+    .hud-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; color: var(--fg);
+    }
+
+    .hud-logo {
+      font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+      pointer-events: auto;
+    }
+
+    .hud-link { pointer-events: auto; transition: color 0.3s; }
+    .hud-link:hover { color: var(--accent); }
+
+    /* ==========================================================================
+       04. HERO SECTION
+       ========================================================================== */
+    .hero {
+      height: 100vh;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 0 5vw; position: relative;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(4rem, 12vw, 16rem);
+      font-weight: 700; text-transform: uppercase; line-height: 0.85; letter-spacing: -0.02em;
+    }
+
+    .hero-title .line { overflow: hidden; display: block; }
+    .hero-title .char { transform: translateY(110%); display: inline-block; }
+
+    .hero-subtitle {
+      font-family: var(--font-serif); font-size: clamp(1.2rem, 2.5vw, 2.5rem); font-style: italic;
+      color: var(--muted); margin-top: 30px; max-width: 700px; line-height: 1.3;
+    }
+
+    /* ==========================================================================
+       05. HORIZONTAL GALLERY
+       ========================================================================== */
+    .gallery-container { width: 100%; height: 100vh; background: var(--bg); overflow: hidden; }
+    .gallery-track { display: flex; height: 100%; width: fit-content; padding-left: 10vw; }
+
+    .project-panel {
+      width: 75vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; padding: 0 5vw; position: relative;
+    }
+
+    .project-inner {
+      width: 100%; display: grid; grid-template-columns: 0.8fr 1.2fr;
+      align-items: center; gap: 60px; position: relative;
+    }
+
+    .project-meta { z-index: 10; display: flex; flex-direction: column; gap: 20px; }
+
+    .project-idx { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; color: var(--muted); }
+    
+    .project-title {
+      font-family: var(--font-display); font-size: clamp(3rem, 6vw, 7rem); font-weight: 700;
+      line-height: 0.9; text-transform: uppercase; letter-spacing: -1px;
+    }
+
+    .project-cat { font-family: var(--font-serif); font-style: italic; font-size: 1.5rem; color: var(--accent); }
+    .project-desc { font-size: 14px; line-height: 1.6; color: var(--muted); max-width: 320px; }
+
+    /* Subpage Links */
+    .subpage-list { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .subpage-link {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg);
+      display: flex; align-items: center; gap: 10px; width: fit-content; pointer-events: auto;
+      transition: transform 0.3s var(--ease-out), color 0.3s;
+    }
+    .subpage-link::before {
+      content: ''; width: 0; height: 1px; background: var(--accent); transition: width 0.3s var(--ease-out);
+    }
+    .subpage-list:hover .subpage-link { opacity: 0.3; } /* Diğerlerini soluklaştır */
+    .subpage-list .subpage-link:hover { opacity: 1; color: var(--accent); transform: translateX(5px); }
+    .subpage-list .subpage-link:hover::before { width: 24px; }
+
+    /* Abstract Visual Block (The Monolith) */
+    .project-visual {
+      width: 100%; height: 75vh;
+      position: relative; overflow: hidden;
+      border-radius: 12px; pointer-events: auto;
+      transform: scale(0.95); transition: transform 0.6s var(--ease-out);
+    }
+    
+    .project-visual:hover { transform: scale(1); }
+
+    /* Premium CSS Generative Art Backgrounds */
+    .art-bg { width: 100%; height: 100%; position: absolute; inset: 0; transition: transform 1s var(--ease-out); }
+    .project-visual:hover .art-bg { transform: scale(1.05); }
+
+    .art-1 { background: radial-gradient(circle at 50% 0%, #172554, #020617); border: 1px solid rgba(59, 130, 246, 0.2); }
+    .art-1::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 40px 40px; }
+    
+    .art-2 { background: linear-gradient(135deg, #451a03, #2e1065, #020617); border: 1px solid rgba(217, 119, 6, 0.2); }
+    
+    .art-3 { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+    .art-3::before { content: 'CAFE 3'; font-family: var(--font-display); font-size: 8rem; font-weight: 700; color: rgba(255,255,255,0.03); transform: rotate(-90deg); white-space: nowrap; }
+
+    .art-4 { background: #111; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 100px #000; }
+    .art-4::after { content: ''; position: absolute; inset: 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; }
+
+    .art-5 { background: radial-gradient(circle at 50% 50%, #4c0519, #000000 70%); border: 1px solid rgba(225, 29, 72, 0.2); }
+
+    /* ==========================================================================
+       06. PORTAL (IFRAME VIEWER)
+       ========================================================================== */
+    .portal-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      z-index: 8000; transform: translateY(100%);
+      transition: transform 0.8s var(--ease-in-out);
+      display: flex; flex-direction: column;
+    }
+
+    .portal-overlay.open { transform: translateY(0%); }
+
+    .portal-header {
+      height: 70px; display: flex; justify-content: space-between; align-items: center;
+      padding: 0 40px; border-bottom: 1px solid var(--border);
+    }
+
+    .portal-title { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .portal-close {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+      cursor: pointer; pointer-events: auto; padding: 10px;
+      transition: color 0.3s;
+    }
+    .portal-close:hover { color: var(--accent); }
+
+    .portal-body { position: relative; flex-grow: 1; background: #ffffff; }
+
+    /* Portal Loader Spinner */
+    .portal-loader {
+      position: absolute; inset: 0; background: #000; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.5s ease;
+    }
+    .portal-loader.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: var(--fg); border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .portal-iframe { width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.5s ease; }
+    .portal-iframe.loaded { opacity: 1; }
+
+    /* ==========================================================================
+       07. RESPONSIVE (MOBILE HANDLING)
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .hud { padding: 24px; mix-blend-mode: normal; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); height: 100px; }
+      .hud-bottom { display: none; }
+      
+      .hero { padding-top: 100px; height: auto; min-height: 80vh; }
+      
+      /* Disable Horizontal Scroll on Mobile, stack vertically */
+      .gallery-container { height: auto; overflow: visible; padding-bottom: 100px; }
+      .gallery-track { flex-direction: column; width: 100%; padding-left: 0; gap: 80px; }
+      
+      .project-panel { width: 100%; height: auto; padding: 0 24px; }
+      .project-inner { grid-template-columns: 1fr; gap: 30px; }
+      
+      .project-meta { grid-row: 2; }
+      .project-visual { grid-row: 1; height: 60vh; }
+      
+      .portal-header { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Grain Effects -->
+  <div class="grain-overlay"></div>
+  
+  <!-- Custom Cursor -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-label" id="cursorLabel">VIEW</div>
+
+  <!-- PRELOADER -->
+  <div class="preloader" id="preloader">
+    <div class="preloader-top">
+      <span>CEPLY TECH</span>
+      <span>EXHIBITION</span>
+    </div>
+    <div class="preloader-center" id="loaderCount">000</div>
+    <div class="preloader-bottom">
+      <span>LOADING ARCHIVE</span>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="loaderBar"></div></div>
+    </div>
+  </div>
+
+  <!-- HUD NAVIGATION -->
+  <nav class="hud">
+    <div class="hud-row">
+      <div class="hud-logo">CEPLY.</div>
+      <a href="https://ceplytech.com" target="_blank" class="hud-link hover-reveal" data-text="VISIT">ceplytech.com ↗</a>
+    </div>
+    <div class="hud-row hud-bottom">
+      <div>Scroll to explore</div>
+      <div id="scrollProgress">00%</div>
+    </div>
+  </nav>
+
+  <!-- SMOOTH SCROLL WRAPPER (LENIS) -->
+  <main id="smooth-wrapper">
+    <div id="smooth-content">
+
+      <!-- HERO -->
+      <section class="hero">
+        <h1 class="hero-title">
+          <span class="line"><span class="char">Digital</span></span>
+          <span class="line"><span class="char">Exhibition</span></span>
+        </h1>
+        <p class="hero-subtitle">Curated interactive experiences, spatial web architectures, and premium e-commerce demonstrations.</p>
+      </section>
+
+      <!-- GALLERY (HORIZONTAL ON DESKTOP, VERTICAL ON MOBILE) -->
+      <section class="gallery-container">
+        <div class="gallery-track" id="galleryTrack">
+
+          <!-- PROJECT 01 -->
+          <article class="project-panel">
+            <div class="project-inner">
+              <div class="project-meta">
+                <div class="project-idx">01 // 05</div>
+                <h2 class="project-title">Cafe 1</h2>
+                <div class="project-cat">E-Commerce Flow</div>
+                <p class="project-desc">Kapsamlı sepet, ödeme ve üye hesabı mimarisine sahip üst düzey dijital e-ticaret platformu.</p>
+                <div class="subpage-list">
+                  <a href="./cafe1/index.html" class="subpage-link hover-reveal" data-text="OPEN">Index</a>
+                  <a href="./cafe1/shop.html" class="subpage-link hover-reveal" data-text="OPEN">Shop</a>
+                  <a href="./cafe1/cart.html" class="subpage-link hover-reveal" data-text="OPEN">Cart</a>
+                  <a href="./cafe1/checkout.html" class="subpage-link hover-reveal" data-text="OPEN">Checkout</a>
+                  <a href="./cafe1/account.html" class="subpage-link hover-reveal" data-text="OPEN">Account</a>
+                </div>
+              </div>
+              <div class="project-visual hover-reveal" data-text="VIEW" data-url="./cafe1/index.html" data-title="Cafe 1">
+                <div class="art-bg art-1"></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- PROJECT 02 -->
+          <article class="project-panel">
+            <div class="project-inner">
+              <div class="project-meta">
+                <div class="project-idx">02 // 05</div>
+                <h2 class="project-title">Cafe 2</h2>
+                <div class="project-cat">React Architecture</div>
+                <p class="project-desc">Modern React ve Vite altyapısı kullanılarak inşa edilmiş, dinamik durum yönetimine sahip arayüz.</p>
+                <div class="subpage-list">
+                  <a href="./cafe2/dist/index.html" class="subpage-link hover-reveal" data-text="OPEN">Production Build</a>
+                </div>
+              </div>
+              <div class="project-visual hover-reveal" data-text="VIEW" data-url="./cafe2/dist/index.html" data-title="Cafe 2">
+                <div class="art-bg art-2"></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- PROJECT 03 -->
+          <article class="project-panel">
+            <div class="project-inner">
+              <div class="project-meta">
+                <div class="project-idx">03 // 05</div>
+                <h2 class="project-title">Cafe 3</h2>
+                <div class="project-cat">Spatial Layout</div>
+                <p class="project-desc">Görsel hiyerarşisi güçlü, editoryal restoran konsepti ve entegre alışveriş akışı.</p>
+                <div class="subpage-list">
+                  <a href="./cafe3/index.html" class="subpage-link hover-reveal" data-text="OPEN">Index</a>
+                  <a href="./cafe3/shop.html" class="subpage-link hover-reveal" data-text="OPEN">Shop</a>
+                  <a href="./cafe3/cart.html" class="subpage-link hover-reveal" data-text="OPEN">Cart</a>
+                  <a href="./cafe3/checkout.html" class="subpage-link hover-reveal" data-text="OPEN">Checkout</a>
+                </div>
+              </div>
+              <div class="project-visual hover-reveal" data-text="VIEW" data-url="./cafe3/index.html" data-title="Cafe 3">
+                <div class="art-bg art-3"></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- PROJECT 04 -->
+          <article class="project-panel">
+            <div class="project-inner">
+              <div class="project-meta">
+                <div class="project-idx">04 // 05</div>
+                <h2 class="project-title">Cafe 4</h2>
+                <div class="project-cat">Minimal Landing</div>
+                <p class="project-desc">Katı bir minimalizm ve pürüzsüz negatif alan kullanımıyla tasarlanmış karşılama sayfası.</p>
+                <div class="subpage-list">
+                  <a href="./cafe4/index.html" class="subpage-link hover-reveal" data-text="OPEN">Index</a>
+                  <a href="./cafe4/404.html" class="subpage-link hover-reveal" data-text="OPEN">404 Display</a>
+                </div>
+              </div>
+              <div class="project-visual hover-reveal" data-text="VIEW" data-url="./cafe4/index.html" data-title="Cafe 4">
+                <div class="art-bg art-4"></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- PROJECT 05 -->
+          <article class="project-panel">
+            <div class="project-inner">
+              <div class="project-meta">
+                <div class="project-idx">05 // 05</div>
+                <h2 class="project-title">Resto 1</h2>
+                <div class="project-cat">Fine Dining</div>
+                <p class="project-desc">Lüks gastronomi için tasarlanmış, karanlık ve atmosferik görsel hikaye anlatımı.</p>
+                <div class="subpage-list">
+                  <a href="./restraurant1/index.html" class="subpage-link hover-reveal" data-text="OPEN">Index</a>
+                  <a href="./restraurant1/404.html" class="subpage-link hover-reveal" data-text="OPEN">404 Display</a>
+                </div>
+              </div>
+              <div class="project-visual hover-reveal" data-text="VIEW" data-url="./restraurant1/index.html" data-title="Restaurant 1">
+                <div class="art-bg art-5"></div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- PADDING FOR BOTTOM -->
+      <section style="height: 20vh;"></section>
+
+    </div>
+  </main>
+
+  <!-- PORTAL (LIVE IFRAME MODAL) -->
+  <div class="portal-overlay" id="portal">
+    <div class="portal-header">
+      <div class="portal-title" id="portalTitle">Project Preview</div>
+      <button class="portal-close hover-reveal" data-text="CLOSE" id="closePortal">[ CLOSE X ]</button>
+    </div>
+    <div class="portal-body">
+      <div class="portal-loader" id="portalLoader">
+        <div class="spinner"></div>
+      </div>
+      <iframe id="portalIframe" class="portal-iframe" src=""></iframe>
+    </div>
+  </div>
+
+  <script>
+    // --------------------------------------------------------
+    // 1. INIT SMOOTH SCROLL (LENIS)
+    // --------------------------------------------------------
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      direction: 'vertical',
+      gestureDirection: 'vertical',
+      smooth: true,
+      smoothTouch: false, // Don't interfere with native mobile scrolling
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    // Sync GSAP and Lenis
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time)=>{ lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0, 0);
+
+    // Update HUD Progress
+    const progressEl = document.getElementById('scrollProgress');
+    lenis.on('scroll', () => {
+      const scrollY = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = maxScroll > 0 ? Math.round((scrollY / maxScroll) * 100) : 0;
+      if(progressEl) progressEl.textContent = progress.toString().padStart(2, '0') + '%';
+    });
+
+    // --------------------------------------------------------
+    // 2. DEVICE DETECTION & CURSOR LOGIC
+    // --------------------------------------------------------
+    const isTouchDevice = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
+    
+    if (!isTouchDevice) {
+      document.body.classList.add('custom-cursor-enabled');
+      
+      const cursorDot = document.getElementById('cursorDot');
+      const cursorLabel = document.getElementById('cursorLabel');
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+      let cursorX = mouseX;
+      let cursorY = mouseY;
+
+      window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      });
+
+      // Render cursor smoothly
+      gsap.ticker.add(() => {
+        cursorX += (mouseX - cursorX) * 0.2;
+        cursorY += (mouseY - cursorY) * 0.2;
+        cursorDot.style.left = cursorX + 'px';
+        cursorDot.style.top = cursorY + 'px';
+        cursorLabel.style.left = cursorX + 'px';
+        cursorLabel.style.top = cursorY + 'px';
+      });
+
+      // Hover Effects
+      document.querySelectorAll('.hover-reveal').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          document.body.classList.add('cursor-active');
+          cursorLabel.textContent = el.getAttribute('data-text') || 'VIEW';
+        });
+        el.addEventListener('mouseleave', () => {
+          document.body.classList.remove('cursor-active');
+        });
+      });
+    }
+
+    // --------------------------------------------------------
+    // 3. PRELOADER SEQUENCE
+    // --------------------------------------------------------
+    window.addEventListener('load', () => {
+      let count = 0;
+      const counter = document.getElementById('loaderCount');
+      const bar = document.getElementById('loaderBar');
+      
+      let interval = setInterval(() => {
+        count += Math.floor(Math.random() * 12) + 2;
+        if(count >= 100) {
+          count = 100;
+          clearInterval(interval);
+          startIntro();
+        }
+        counter.innerHTML = count.toString().padStart(3, '0');
+        bar.style.width = count + '%';
+      }, 35);
+    });
+
+    function startIntro() {
+      const tl = gsap.timeline();
+      
+      tl.to('#preloader', {
+        yPercent: -100,
+        duration: 1.2,
+        ease: "power4.inOut",
+        delay: 0.2
+      })
+      .from('.hero-title .char', {
+        yPercent: 110,
+        duration: 1.2,
+        stagger: 0.05,
+        ease: "expo.out"
+      }, "-=0.6")
+      .from('.hero-subtitle', {
+        opacity: 0,
+        y: 20,
+        duration: 1,
+        ease: "power2.out"
+      }, "-=0.8");
+    }
+
+    // --------------------------------------------------------
+    // 4. GSAP HORIZONTAL SCROLL (DESKTOP ONLY)
+    // --------------------------------------------------------
+    let mm = gsap.matchMedia();
+
+    mm.add("(min-width: 1025px)", () => {
+      const track = document.getElementById('galleryTrack');
+      
+      // Calculate exactly how far to move the track to the left
+      function getScrollAmount() {
+        let trackWidth = track.scrollWidth;
+        return -(trackWidth - window.innerWidth);
+      }
+
+      const tween = gsap.to(track, {
+        x: getScrollAmount,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".gallery-container",
+          pin: true,
+          scrub: 1,
+          end: () => "+=" + (track.scrollWidth - window.innerWidth),
+          invalidateOnRefresh: true
+        }
+      });
+
+      // Return cleanup function (optional but good practice)
+      return () => {
+        tween.kill();
+      };
+    });
+
+    // Mobile Fade-ins (If stacked vertically)
+    mm.add("(max-width: 1024px)", () => {
+      gsap.utils.toArray('.project-panel').forEach(panel => {
+        gsap.from(panel, {
+          opacity: 0.2,
+          y: 50,
+          duration: 1,
+          scrollTrigger: {
+            trigger: panel,
+            start: "top 80%",
+            end: "top 20%",
+            scrub: true
+          }
+        });
+      });
+    });
+
+    // --------------------------------------------------------
+    // 5. PORTAL VIEWER LOGIC
+    // --------------------------------------------------------
+    const portal = document.getElementById('portal');
+    const portalIframe = document.getElementById('portalIframe');
+    const portalTitle = document.getElementById('portalTitle');
+    const portalLoader = document.getElementById('portalLoader');
+    const closeBtn = document.getElementById('closePortal');
+
+    function openPortal(url, title) {
+      portalTitle.textContent = title;
+      portal.classList.add('open');
+      lenis.stop(); // Disable scrolling in background
+
+      // Reset iframe state
+      portalIframe.classList.remove('loaded');
+      portalLoader.classList.remove('hidden');
+      
+      // Set source
+      portalIframe.src = url;
+
+      // When iframe loads, hide spinner and show iframe
+      portalIframe.onload = () => {
+        portalLoader.classList.add('hidden');
+        portalIframe.classList.add('loaded');
+      };
+    }
+
+    // Bind Visual Clicks
+    document.querySelectorAll('.project-visual').forEach(el => {
+      el.addEventListener('click', () => {
+        const url = el.getAttribute('data-url');
+        const title = el.getAttribute('data-title');
+        if(url) openPortal(url, title);
+      });
+    });
+
+    // Bind Subpage Links
+    document.querySelectorAll('.subpage-link').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault(); 
+        const url = el.getAttribute('href');
+        const title = el.closest('.project-meta').querySelector('.project-title').textContent + ' - ' + el.textContent;
+        openPortal(url, title);
+      });
+    });
+
+    function closePortalFunc() {
+      portal.classList.remove('open');
+      lenis.start(); // Re-enable scrolling
+      
+      // Clear iframe after transition to save memory
+      setTimeout(() => {
+        portalIframe.src = '';
+        portalIframe.classList.remove('loaded');
+        portalLoader.classList.remove('hidden');
+      }, 800);
+    }
+
+    closeBtn.addEventListener('click', closePortalFunc);
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && portal.classList.contains('open')) {
+        closePortalFunc();
+      }
+    });
+
+  </script>
+</body>
+</html>

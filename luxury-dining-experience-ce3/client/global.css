@@ -1,0 +1,146 @@
+/** @import must precede all other statements */
+@import "tailwindcss";
+
+/* Theme, content globs, and plugins are declared in tailwind.config.ts. */
+@config "../tailwind.config.ts";
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    /* Core luxury palette — obsidian / charcoal / ivory / champagne gold */
+    --obsidian: 0 0% 5%;
+    --obsidian-light: 0 0% 9%;
+    --ivory: 42 38% 95%;
+    --gold: 38 42% 64%;
+    --gold-light: 40 55% 78%;
+    --gold-muted: 38 20% 32%;
+
+    --background: var(--obsidian);
+    --foreground: var(--ivory);
+
+    --card: 0 0% 8%;
+    --card-foreground: var(--ivory);
+
+    --popover: 0 0% 7%;
+    --popover-foreground: var(--ivory);
+
+    --primary: var(--gold);
+    --primary-foreground: 0 0% 7%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: var(--ivory);
+
+    --muted: 0 0% 13%;
+    --muted-foreground: 42 12% 65%;
+
+    --accent: 38 30% 18%;
+    --accent-foreground: var(--ivory);
+
+    --destructive: 6 55% 45%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 40 15% 22%;
+    --input: 40 15% 22%;
+    --ring: var(--gold);
+
+    --radius: 0rem;
+
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 42 20% 90%;
+    --sidebar-primary: var(--gold);
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: var(--ivory);
+    --sidebar-border: 40 15% 22%;
+    --sidebar-ring: var(--gold);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-obsidian text-ivory font-sans antialiased;
+    font-weight: 300;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  ::selection {
+    background: hsl(var(--gold) / 0.35);
+    color: hsl(var(--ivory));
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--obsidian));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--gold-muted));
+    border: 2px solid hsl(var(--obsidian));
+  }
+
+  html {
+    scrollbar-color: hsl(var(--gold-muted)) hsl(var(--obsidian));
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: '"Cormorant Garamond"', Georgia, serif;
+  }
+
+  .grain-overlay {
+    pointer-events: none;
+    position: fixed;
+    inset: -10%;
+    width: 120%;
+    height: 120%;
+    z-index: 60;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: grain 8s steps(10) infinite;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-cursor {
+    cursor: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Aura Coffee - Artisanal Roastery",
+  "description": "An elegant, high-end artisanal coffee shop website featuring an interactive menu, roast finder, gallery, patron reviews, table reservations, and order bag with an editorial light visual aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
