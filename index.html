@@ -336,15 +336,12 @@
     let generatedHTML = '';
 
     projectFolders.forEach((project, index) => {
-      // Renkleri sırayla takip etmesi için (4'erli döngü)
       const color = projectColors[index % projectColors.length];
       const title = formatProjectTitle(project.id);
-      
-      // 01, 02, 03... formatında sol taraf rakamlarını oluşturma
       const numStr = String(index + 1).padStart(2, '0');
       
       generatedHTML += `
-        <li class="project-item" data-color="${color}" data-url="./${project.id}/index.html" data-img="${project.img}">
+        <li class="project-item" data-color="${color}" data-folder-id="${project.id}" data-img="${project.img}">
           <div class="project-info-left">
             <span class="project-num">${numStr}</span>
             <h2 class="project-title">${title}</h2>
@@ -354,8 +351,25 @@
       `;
     });
 
-    // Hazırlanan HTML'i listeye yerleştirme
     projectListEl.innerHTML = generatedHTML;
+
+    // Klasördeki index.html içeriğinde <script type="module"> varlığını kontrol eden dinamik fonksiyon
+    async function resolveProjectUrl(folderId) {
+      try {
+        const response = await fetch(`./${folderId}/index.html`);
+        if (!response.ok) return `./${folderId}/index.html`;
+
+        const htmlText = await response.text();
+        
+        // Klasördeki HTML içinde type="module" var mı?
+        const isVite = htmlText.includes('type="module"');
+
+        // Vite ise klasör yolu (./emlak3/), düz HTML ise (./cafe1/index.html)
+        return isVite ? `./${folderId}/` : `./${folderId}/index.html`;
+      } catch (err) {
+        return `./${folderId}/index.html`;
+      }
+    }
 
     // ==========================================================================
     // 01. SMOOTH SCROLL (LENIS)
@@ -477,7 +491,7 @@
     let clickX = 0, clickY = 0;
 
     document.querySelectorAll('.project-item').forEach(item => {
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', async (e) => {
         const clickedColor = item.getAttribute('data-color');
         if(clickedColor) {
            document.documentElement.style.setProperty('--accent', clickedColor);
@@ -485,9 +499,14 @@
 
         clickX = e.clientX || window.innerWidth/2; 
         clickY = e.clientY || window.innerHeight/2;
-        const url = item.getAttribute('data-url');
+        
+        const folderId = item.getAttribute('data-folder-id');
         const title = item.querySelector('.project-title').textContent;
-        openPortal(url, title, clickX, clickY);
+
+        // Tıklandığı an arka planda hızlıca type="module" kontrolü yapılarak URL çözümlenir
+        const targetUrl = await resolveProjectUrl(folderId);
+
+        openPortal(targetUrl, title, clickX, clickY);
       });
     });
 
