@@ -270,9 +270,60 @@
         <span>Discipline</span>
       </div>
 
-      <!-- KİNETİK DİZİN LİSTESİ (JAVASCRIPT İLE OTOMATİK DOLDURULACAK) -->
-      <ul class="project-list"></ul>
-      
+      <!-- KİNETİK DİZİN LİSTESİ -->
+      <ul class="project-list">
+        
+        <li class="project-item" data-color="rgb(59, 111, 224)" data-url="./cafe1/index.html" data-img="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80">
+          <div class="project-info-left">
+            <span class="project-num">01</span>
+            <h2 class="project-title">Cafe One</h2>
+          </div>
+          <span class="project-category">E-Commerce Flow</span>
+        </li>
+
+        <li class="project-item" data-color="rgb(231, 201, 106)" data-url="./cafe2/index.html" data-img="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=800&q=80">
+          <div class="project-info-left">
+            <span class="project-num">02</span>
+            <h2 class="project-title">Cafe Two</h2>
+          </div>
+          <span class="project-category">React Application</span>
+        </li>
+
+        <li class="project-item" data-color="rgb(224, 90, 48)" data-url="./cafe3/index.html" data-img="https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=800&q=80">
+          <div class="project-info-left">
+            <span class="project-num">03</span>
+            <h2 class="project-title">Cafe Three</h2>
+          </div>
+          <span class="project-category">Spatial Layout</span>
+        </li>
+
+        <li class="project-item" data-color="rgb(168, 237, 188)" data-url="./cafe4/index.html" data-img="https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=800&q=80">
+          <div class="project-info-left">
+            <span class="project-num">04</span>
+            <h2 class="project-title">Cafe Four</h2>
+          </div>
+          <span class="project-category">Minimal Interface</span>
+        </li>
+
+        <!-- GÜNCELLENEN RESTO 1 DİZİNİ -->
+        <li class="project-item" data-color="rgb(59, 111, 224)" data-url="./resto1/index.html" data-img="https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80">
+          <div class="project-info-left">
+            <span class="project-num">05</span>
+            <h2 class="project-title">Resto One</h2>
+          </div>
+          <span class="project-category">Fine Dining Concept</span>
+        </li>
+
+        <!-- YENİ EKLENEN RESTO 2 DİZİNİ -->
+        <li class="project-item" data-color="rgb(231, 201, 106)" data-url="./resto2/" data-img="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80">
+          <div class="project-info-left">
+            <span class="project-num">06</span>
+            <h2 class="project-title">Resto Two</h2>
+          </div>
+          <span class="project-category">Restaurant Interface</span>
+        </li>
+
+      </ul>
     </div>
   </main>
 
@@ -291,72 +342,6 @@
   </div>
 
   <script>
-    // ==========================================================================
-    // 00. DYNAMIC PROJECT GENERATION
-    // ==========================================================================
-    const projectFolders = [
-      { id: "cafe1", category: "E-Commerce Flow", img: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80" },
-      { id: "cafe2", category: "React Application", img: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=800&q=80" },
-      { id: "cafe3", category: "Spatial Layout", img: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=800&q=80" },
-      { id: "cafe4", category: "Minimal Interface", img: "https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=800&q=80" },
-      { id: "resto1", category: "Fine Dining Concept", img: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80" },
-      { id: "resto2", category: "Restaurant Interface", img: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80" },
-      { id: "emlak1", category: "Real Estate System", img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80" },
-      { id: "emlak2", category: "Property Viewer", img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" },
-      { id: "emlak3", category: "Housing Platform", img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80" },
-      { id: "emlak4", category: "Luxury Estates", img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" }
-    ];
-
-    // Döngüsel olarak kullanılacak projenin hover renkleri
-    const projectColors = [
-      "rgb(59, 111, 224)", // Mavi
-      "rgb(231, 201, 106)", // Sarı
-      "rgb(224, 90, 48)",  // Turuncu
-      "rgb(168, 237, 188)" // Yeşil
-    ];
-
-    // Rakamları ingilizce kelimelere çevirecek obje sözlük
-    const numToWordMap = {
-      "1": "One", "2": "Two", "3": "Three", "4": "Four", "5": "Five",
-      "6": "Six", "7": "Seven", "8": "Eight", "9": "Nine", "0": "Zero"
-    };
-
-    // Klasör ismini (örn: "cafe1") -> Başlığa (örn: "Cafe One") dönüştüren fonksiyon
-    function formatProjectTitle(id) {
-      const match = id.match(/([a-zA-Z]+)(\d+)/);
-      if (match) {
-        const text = match[1].charAt(0).toUpperCase() + match[1].slice(1);
-        const num = match[2].split('').map(n => numToWordMap[n] || n).join(' ');
-        return `${text} ${num}`;
-      }
-      return id.charAt(0).toUpperCase() + id.slice(1);
-    }
-
-    const projectListEl = document.querySelector('.project-list');
-    let generatedHTML = '';
-
-    projectFolders.forEach((project, index) => {
-      // Renkleri sırayla takip etmesi için (4'erli döngü)
-      const color = projectColors[index % projectColors.length];
-      const title = formatProjectTitle(project.id);
-      
-      // 01, 02, 03... formatında sol taraf rakamlarını oluşturma
-      const numStr = String(index + 1).padStart(2, '0');
-      
-      generatedHTML += `
-        <li class="project-item" data-color="${color}" data-url="./${project.id}/index.html" data-img="${project.img}">
-          <div class="project-info-left">
-            <span class="project-num">${numStr}</span>
-            <h2 class="project-title">${title}</h2>
-          </div>
-          <span class="project-category">${project.category}</span>
-        </li>
-      `;
-    });
-
-    // Hazırlanan HTML'i listeye yerleştirme
-    projectListEl.innerHTML = generatedHTML;
-
     // ==========================================================================
     // 01. SMOOTH SCROLL (LENIS)
     // ==========================================================================
